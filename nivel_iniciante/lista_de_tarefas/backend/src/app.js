@@ -1,7 +1,10 @@
 import express from 'express';
 import { configureMiddlewares } from './middlewares/app.middlewares.js';
+import { router } from './routes/index.js';
 
 const app = express()
+
+app.use(router)
 
 configureMiddlewares(app)
 
