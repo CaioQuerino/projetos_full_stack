@@ -16,7 +16,8 @@ export class TaskController {
     }
 
     async read(req, res) {
-        return {}
+        const tasks = await prisma.task.findMany()
+        return res.status(200).json(tasks)
     }
 
     async readById(req, res) {
