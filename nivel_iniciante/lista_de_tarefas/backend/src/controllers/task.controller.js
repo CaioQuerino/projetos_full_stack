@@ -1,3 +1,4 @@
+import z from "zod";
 import { prisma } from "../lib/prisma.js";
 import { schemaTask } from "../models/task.models.js";
 
@@ -21,7 +22,49 @@ export class TaskController {
     }
 
     async readById(req, res) {
-        return {}
+        try {
+            const id = taskIdSchema.parse(Number(req.params.id));
+
+            const task = await prisma.task.findUnique({
+                where: { id },
+                select: {
+                    id: true,
+                    title: true,
+                    task: true,
+                    completed: true,
+                    createdAt: true,
+                    updatedAt: true
+                }
+            });
+
+            if (!task) {
+                return res.status(404).json({
+                    success: false,
+                    error: "Task not found"
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                data: task
+            });
+
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Invalid ID format",
+                    details: error.errors
+                });
+            }
+
+            console.error('Read Task Error:', error);
+            return res.status(500).json({
+                success: false,
+                error: "Failed to fetch task",
+                details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
     }
 
     async update(req, res) {
