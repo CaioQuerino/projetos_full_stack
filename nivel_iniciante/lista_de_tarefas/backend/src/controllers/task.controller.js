@@ -114,7 +114,31 @@ export class TaskController {
     }
 
     async delete(req, res) {
-        return {}
+        try {
+            const id = taskIdSchema.parse(Number(req.params.id));
+
+            await prisma.task.delete({
+                where: { id }
+            });
+
+            return res.status(204).end();
+
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Invalid ID format",
+                    details: error.errors
+                });
+            }
+
+            if (error.code === 'P2025') {
+                return res.status(404).json({
+                    success: false,
+                    error: "Task not found"
+                });
+            }
+        }
     }
 
 }
