@@ -62,13 +62,55 @@ export class TaskController {
             return res.status(500).json({
                 success: false,
                 error: "Failed to fetch task",
-                details: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }
     }
 
     async update(req, res) {
-        return {}
+        try {
+            const id = taskIdSchema.parse(Number(req.params.id));
+            const validatedData = schemaTask.partial().parse(req.body);
+
+            const updatedTask = await prisma.task.update({
+                where: { id },
+                data: validatedData,
+                select: {
+                    id: true,
+                    title: true,
+                    task: true,
+                    completed: true,
+                    createdAt: true,
+                    updatedAt: true
+                }
+            });
+
+            return res.status(200).json({
+                success: true,
+                data: updatedTask
+            });
+
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Validation error",
+                    details: error.errors
+                });
+            }
+
+            if (error.code === 'P2025') {
+                return res.status(404).json({
+                    success: false,
+                    error: "Task not found"
+                });
+            }
+
+            console.error('Update Task Error:', error);
+            return res.status(500).json({
+                success: false,
+                error: "Failed to update task",
+            });
+        }
     }
 
     async delete(req, res) {
